@@ -5,12 +5,14 @@ authors = ["Trevor R.H. Clarke <trevor.clarke@ballaerospace.com"]
 edition = "2021"
 description = "A tool to manage MQTT connections in Rust."
 license = "GPL-2.0-or-later"
-publish = ["ball-cargo-local"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 bytes = { version = "1.6.0", registry = "crate-proxy" }
 rumqttc = { version = "0.24.0", registry = "crate-proxy", features = ["url"] }
-tokio = { version = "1.37.0", registry = "crate-proxy", features = ["rt-multi-thread", "full"] }
+tokio = { version = "1.37.0", registry = "crate-proxy" }
 url = { version = "2.5.0", registry = "crate-proxy" }
+
+[dev-dependencies]
+tokio = { version = "1.37.0", registry = "crate-proxy", features = ["rt-multi-thread", "signal"] }

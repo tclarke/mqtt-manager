@@ -252,29 +252,6 @@ source = "sparse+https://arti.bsf.ball.com/artifactory/api/cargo/crate-proxy/ind
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
-name = "parking_lot"
-version = "0.12.1"
-source = "sparse+https://arti.bsf.ball.com/artifactory/api/cargo/crate-proxy/index/"
-checksum = "3742b2c103b9f06bc9fff0a37ff4912935851bee6d36f3c02bcc755bcfec228f"
-dependencies = [
- "lock_api",
- "parking_lot_core",
-]
-
-[[package]]
-name = "parking_lot_core"
-version = "0.9.9"
-source = "sparse+https://arti.bsf.ball.com/artifactory/api/cargo/crate-proxy/index/"
-checksum = "4c42a9226546d68acdd9c0a280d17ce19bfe27a46bf68784e4066115788d008e"
-dependencies = [
- "cfg-if",
- "libc",
- "redox_syscall",
- "smallvec",
- "windows-targets 0.48.5",
-]
-
-[[package]]
 name = "percent-encoding"
 version = "2.3.1"
 source = "sparse+https://arti.bsf.ball.com/artifactory/api/cargo/crate-proxy/index/"
@@ -308,15 +285,6 @@ source = "sparse+https://arti.bsf.ball.com/artifactory/api/cargo/crate-proxy/ind
 checksum = "0fa76aaf39101c457836aec0ce2316dbdc3ab723cdda1c6bd4e6ad4208acaca7"
 dependencies = [
  "proc-macro2",
-]
-
-[[package]]
-name = "redox_syscall"
-version = "0.4.1"
-source = "sparse+https://arti.bsf.ball.com/artifactory/api/cargo/crate-proxy/index/"
-checksum = "4722d768eff46b75989dd134e5c353f0d6296e5aaa3132e776cbdb56be7731aa"
-dependencies = [
- "bitflags",
 ]
 
 [[package]]
@@ -470,12 +438,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "smallvec"
-version = "1.13.2"
-source = "sparse+https://arti.bsf.ball.com/artifactory/api/cargo/crate-proxy/index/"
-checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
-
-[[package]]
 name = "socket2"
 version = "0.5.6"
 source = "sparse+https://arti.bsf.ball.com/artifactory/api/cargo/crate-proxy/index/"
@@ -557,7 +519,6 @@ dependencies = [
  "libc",
  "mio",
  "num_cpus",
- "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2",
