@@ -4,7 +4,6 @@
 //! 
 //! ```no_run
 //! use mqtt_manager::*;
-//! use rumqttc::Publish;
 //! use std::time::Duration;
 //! 
 //! async fn handle_msg_a(pubdata: Publish) {
@@ -36,8 +35,8 @@ use std::pin::Pin;
 use std::{time::Duration, future::Future};
 use std::collections::HashMap;
 
-use rumqttc::{MqttOptions, AsyncClient, EventLoop, Event, Publish};
-use url::Url;
+pub use rumqttc::Publish;
+use rumqttc::{MqttOptions, AsyncClient, EventLoop, Event, mqttbytes::matches};
 
 /// Type for subscription callbacks. See [`crate::make_callback`]
 pub type CallbackFn = Box<dyn Fn(Publish) -> Pin<Box<dyn Future<Output=()>>>>;
@@ -46,9 +45,7 @@ pub type CallbackFn = Box<dyn Fn(Publish) -> Pin<Box<dyn Future<Output=()>>>>;
 /// 
 /// # Example
 /// ```
-/// use mqtt_manager::make_callback;
-/// use rumqttc::Publish;
-///
+/// use mqtt_manager::{make_callback, Publish};
 /// async fn callback(pubpkt: Publish) {}
 /// 
 /// let cb_handle = make_callback!(callback);
@@ -70,25 +67,13 @@ pub struct MqttManager {
 #[allow(dead_code)]
 impl MqttManager {
     /// Create a new MqttManager from a host URL in the form:
-    /// - mqtt://localhost
-    /// - mqtt://localhost:1883
-    /// - mqtt://localhost:1883/rts_2
-    /// 
-    /// The default client ID is "rts".
-    /// 
-    /// The first form uses the default port 1883.
-    /// 
-    /// The second form specified a host and port.
-    /// 
-    /// The third form also overrides the client ID. This is typically only done in tests to
-    /// allow for multiple test threads to run correctly.
+    /// - mqtt://localhost:1883?client_id=client2
     pub fn new(host_url: &str) -> MqttManager {
-        let u = Url::parse(host_url).expect("Invalid URL");
-        assert_eq!(u.scheme(), "mqtt");
-        let host = u.host_str().unwrap_or("localhost");
-        let port = u.port().unwrap_or(1883);
-        let id = u.path_segments().map_or("rts", |mut segs| { segs.next().unwrap() });
-        let mut opts = MqttOptions::new(id, host, port);
+        let mut opts = if host_url.contains("client_id=") {
+            MqttOptions::parse_url(host_url).expect("Error parsing MQTT URL")
+        } else {
+            MqttOptions::parse_url(format!("{host_url}?client_id=busbridge")).expect("Error parsing MQTT URL")
+        };
         opts.set_keep_alive(Duration::from_secs(60));
         let (client, eventloop) = AsyncClient::new(opts, 10);
         MqttManager {
@@ -134,60 +119,64 @@ impl MqttManager {
     /// This should be called reguarly, either in an event loop or in a background thread using tokio::spawn.
     /// 
     /// If a SUBSCRIBE packet is returned and there's a registered callback it will be await'd.
-    pub async fn process(&mut self) {
+    pub async fn process(&mut self) -> std::result::Result<(), rumqttc::ConnectionError> {
         match self.eventloop.poll().await {
             Ok(Event::Incoming(rumqttc::Packet::Publish(data))) => {
-                if let Some(callback) = self.subscriptions.get(&data.topic) {
-                    callback(data).await;
+                for (filter, callback) in self.subscriptions.iter() {
+                    if matches(&data.topic, filter) {
+                        callback(data).await;
+                        break;
+                    }
                 }
+                Ok(())
             }
-            Ok(_) => (),
-            Err(err) => println!("{err}")
+            Ok(_) => Ok(()),
+            Err(err) => Err(err)
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    /// These tests require an MQTT broker.
+    /// `docker run eclipse-mosquitto:2.0` will run mosquitto on localhost:1883
+    /// Other brokers have not been tested except mqttest which is known to not
+    /// work as it doesn't support QOS 2.
     use bytes::Bytes;
 
     use super::*;
 
-    const MQTT_URL: &str = "mqtt://mosquitto.mosquitto.svc.cluster.local";
+    const MQTT_URL: &str = "mqtt://localhost:1883?client_id=";
 
     #[tokio::test]
     async fn connect() {
-        let mut mgr = MqttManager::new(MQTT_URL);
-        mgr.process().await;
+        let mut mgr = MqttManager::new(format!("{MQTT_URL}rts_connect").as_str());
+        mgr.process().await.expect("Connection refused. Make sure you are running a broker on localhost:1883");
         mgr.disconnect().await;
     }
 
     #[tokio::test]
     async fn publish() {
-        let mut mgr = MqttManager::new(format!("{MQTT_URL}/rts_publish").as_str());
+        let mut mgr = MqttManager::new(format!("{MQTT_URL}rts_publish").as_str());
         mgr.publish("test", "bar", 0).await;
         mgr.publish("test", "ack", 1).await;
         mgr.publish("test", "blah", 2).await;
         for _ in 0..8 {  // We expect exactly 8 packets for the above sequence
-            tokio::time::timeout(Duration::from_secs(5), mgr.process()).await.expect("Error, timed out waiting on packet");
+            tokio::time::timeout(Duration::from_secs(5), mgr.process()).await.expect("Error, timed out waiting on packet").unwrap();
         }
         mgr.disconnect().await;
     }
 
     #[tokio::test]
     async fn subscribe() {
-        async fn check_payload(pkt: Publish) {
-            assert_eq!(pkt.payload, Bytes::from("test"));
-        }
-
-        let mut mgr = MqttManager::new(format!("{MQTT_URL}/rts_subscribe").as_str());
-        mgr.process().await;
-        mgr.subscribe("test2", 0, make_callback!(check_payload)).await;
-        mgr.process().await;
+        let mut mgr = MqttManager::new(format!("{MQTT_URL}rts_subscribe").as_str());
+        mgr.process().await.unwrap();
+        mgr.subscribe("test2", 0, make_callback!(|pkt: Publish| async move { assert_eq!(pkt.payload, Bytes::from("test")); })).await;
+        mgr.process().await.unwrap();
         mgr.publish("test2", "test", 0).await;
-        mgr.process().await;
-        mgr.process().await;
-        mgr.process().await;
+        mgr.process().await.unwrap();
+        mgr.process().await.unwrap();
+        mgr.process().await.unwrap();
         mgr.disconnect().await;
     }
 }
