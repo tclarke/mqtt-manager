@@ -3,8 +3,8 @@ name = "mqtt-manager"
 version = "1.0.0"
 authors = ["Trevor R.H. Clarke <trevor.clarke@ballaerospace.com"]
 edition = "2021"
-description = "A tool to manage MQTT connections in Rust."
-license = "GPL-2.0-or-later"
+description = "A library to manage MQTT connections in Rust. Based on rumqttc."
+license = "GPL-3.0-or-later"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
