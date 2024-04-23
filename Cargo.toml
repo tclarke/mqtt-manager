@@ -11,10 +11,10 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bytes = { version = "1.6.0", registry = "crate-proxy" }
-rumqttc = { version = "0.24.0", registry = "crate-proxy", features = ["url"] }
-tokio = { version = "1.37.0", registry = "crate-proxy" }
-url = { version = "2.5.0", registry = "crate-proxy" }
+bytes = { version = "1.6.0" }
+rumqttc = { version = "0.24.0", features = ["url"] }
+tokio = { version = "1.37.0" }
+url = { version = "2.5.0" }
 
 [dev-dependencies]
-tokio = { version = "1.37.0", registry = "crate-proxy", features = ["rt-multi-thread", "signal"] }
+tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
