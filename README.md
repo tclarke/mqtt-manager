@@ -4,11 +4,11 @@
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
 
-[crates-badge]: https://img.shields.io/crates/v/mqtt-manager.svg
+[crates-badge]: https://img.shields.io/crates/v/mqtt-manager
 [crates-url]: https://crates.io/crates/mqtt-manager
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [mit-url]: https://choosealicense.com/licenses/mit/
-[docs-badge]: https://img.shields.io/docsrs/mqtt-manager.svg
+[docs-badge]: https://img.shields.io/docsrs/mqtt-manager
 [docs-url]: https://docs.rs/crate/mqtt-manager/latest
 
 ## Changelog
