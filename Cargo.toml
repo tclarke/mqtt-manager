@@ -1,6 +1,6 @@
 [package]
 name = "mqtt-manager"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Trevor R.H. Clarke <trevor.clarke@ballaerospace.com>"]
 edition = "2021"
 description = "A library to manage MQTT connections in Rust. Based on rumqttc."
